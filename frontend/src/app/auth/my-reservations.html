@@ -1,0 +1,34 @@
+<main class="account-page">
+    <section class="account-card account-card--wide">
+        <p class="account-eyebrow">007 RETROFIT STUDIO</p>
+        <h1>Your reservations.</h1>
+        <p class="account-lead">Track your appointment requests and see admin decisions.</p>
+        @if (error()) {
+        <p role="alert" class="account-message account-message--error">{{ error() }}</p>
+        } @else if (reservations().length === 0) {
+        <p class="account-message">You have no reservations yet.</p>
+        } @else {
+        <div class="customer-reservations">
+            @for (reservation of reservations(); track reservation.id) {
+            <article>
+                <div>
+                    <strong>{{ reservation.date }} · {{ reservation.time }}</strong>
+                    <span>{{ reservation.serviceType === 'Home' ? 'Home service' : 'Workshop visit' }}</span>
+                </div>
+                <span class="reservation-status" [class.reservation-status--pending]="reservation.status === 'Pending'"
+                    [class.reservation-status--approved]="reservation.status === 'Approved'"
+                    [class.reservation-status--rejected]="reservation.status === 'Rejected'">
+                    {{ reservation.status }}
+                </span>
+                @if (reservation.travelFeeCents > 0) {
+                <p>Home-service travel fee: PHP {{ (reservation.travelFeeCents / 100).toFixed(2) }}</p>
+                }
+                @if (reservation.rejectionReason) {
+                <p>Reason: {{ reservation.rejectionReason }}</p>
+                }
+            </article>
+            }
+        </div>
+        }
+    </section>
+</main>

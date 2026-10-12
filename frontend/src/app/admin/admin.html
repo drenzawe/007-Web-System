@@ -1,0 +1,177 @@
+<main class="admin-page">
+    <div class="admin-page__inner">
+        <header class="admin-header">
+            <div>
+                <p class="admin-eyebrow"><span></span> 007 RETROFIT STUDIO · ADMINISTRATION</p>
+                <h1>Operations <em>desk.</em></h1>
+                <p>Review requests, plan your schedule, and manage the admin team.</p>
+            </div>
+            <span class="admin-header__badge">ADMIN PANEL</span>
+        </header>
+
+        @if (error()) {
+        <p role="alert" class="admin-message admin-message--error">{{ error() }}</p>
+        }
+        @if (notice()) {
+        <p role="status" class="admin-message admin-message--success">{{ notice() }}</p>
+        }
+
+        <nav class="admin-tabs" aria-label="Admin sections">
+            <button type="button" [class.admin-tab--active]="section() === 'requests'" (click)="section.set('requests')">
+                Reservations
+            </button>
+            <button type="button" [class.admin-tab--active]="section() === 'availability'" (click)="section.set('availability')">
+                Availability
+            </button>
+            <button type="button" [class.admin-tab--active]="section() === 'admins'" (click)="section.set('admins')">
+                Admin team
+            </button>
+        </nav>
+
+        @if (section() === 'requests') {
+        <section class="admin-panel">
+            <div class="admin-panel__toolbar">
+                <div>
+                    <p class="admin-panel__eyebrow">BOOKING REQUESTS</p>
+                    <h2>{{ monthLabel() }}</h2>
+                </div>
+                <div class="admin-month-nav">
+                    <button type="button" aria-label="Previous month" (click)="changeMonth(-1)">←</button>
+                    <button type="button" aria-label="Next month" (click)="changeMonth(1)">→</button>
+                </div>
+            </div>
+
+            <div class="admin-filters" aria-label="Filter reservations">
+                @for (status of statusFilters; track status) {
+                <button type="button" [class.admin-filter--active]="statusFilter() === status"
+                    (click)="statusFilter.set(status)">{{ status }}</button>
+                }
+            </div>
+
+            @if (loading() && reservations().length === 0) {
+            <p class="admin-empty">Loading reservations...</p>
+            } @else if (visibleReservations().length === 0) {
+            <p class="admin-empty">No {{ statusFilter() === 'All' ? '' : statusFilter().toLowerCase() }} reservations this month.</p>
+            } @else {
+            <div class="reservation-list">
+                @for (reservation of visibleReservations(); track reservation.id) {
+                <article class="reservation-card">
+                    <div class="reservation-card__top">
+                        <div>
+                            <p class="reservation-card__date">{{ reservation.date }} <span>·</span> {{ reservation.time }}</p>
+                            <h3>{{ reservation.name }}</h3>
+                            <a class="reservation-card__email" [href]="'mailto:' + reservation.email">{{ reservation.email }}</a>
+                        </div>
+                        <span class="reservation-badge" [class.reservation-badge--pending]="reservation.status === 'Pending'"
+                            [class.reservation-badge--approved]="reservation.status === 'Approved'"
+                            [class.reservation-badge--rejected]="reservation.status === 'Rejected'">
+                            {{ reservation.status }}
+                        </span>
+                    </div>
+
+                    <div class="reservation-card__details">
+                        <div><span>SERVICE</span><strong>{{ reservation.serviceType === 'Home' ? 'Home service' : 'Workshop visit' }}</strong></div>
+                        <div><span>CUSTOMER LOCATION</span><strong>{{ reservation.city }}</strong><p>{{ reservation.address }}</p></div>
+                        @if (reservation.status === 'Approved' && reservation.travelFeeCents > 0) {
+                        <div><span>TRAVEL FEE</span><strong>PHP {{ (reservation.travelFeeCents / 100).toFixed(2) }}</strong></div>
+                        }
+                    </div>
+
+                    @if (reservation.status === 'Pending') {
+                    <div class="reservation-actions">
+                        @if (reservation.serviceType === 'Home') {
+                        <label>
+                            Home-service fee (PHP)
+                            <input type="number" min="0" step="50" [ngModel]="travelFees()[reservation.id] ?? 0"
+                                (ngModelChange)="setTravelFee(reservation.id, $event)" />
+                        </label>
+                        }
+                        <button type="button" class="admin-action admin-action--approve" [disabled]="saving() === reservation.id"
+                            (click)="approve(reservation)">Approve request</button>
+                        <label class="reservation-actions__reason">
+                            Rejection reason
+                            <input type="text" minlength="5" maxlength="500" placeholder="e.g. Outside our service area"
+                                [ngModel]="rejectionReasons()[reservation.id] ?? ''"
+                                (ngModelChange)="setRejectionReason(reservation.id, $event)" />
+                        </label>
+                        <button type="button" class="admin-action admin-action--reject" [disabled]="saving() === reservation.id"
+                            (click)="reject(reservation)">Reject request</button>
+                    </div>
+                    } @else if (reservation.status === 'Rejected') {
+                    <p class="reservation-card__rejection"><strong>Rejection reason:</strong> {{ reservation.rejectionReason }}</p>
+                    }
+                </article>
+                }
+            </div>
+            }
+        </section>
+        } @else if (section() === 'availability') {
+        <section class="admin-panel availability-panel">
+            <div class="admin-panel__toolbar">
+                <div>
+                    <p class="admin-panel__eyebrow">SHOP CALENDAR</p>
+                    <h2>Manage availability</h2>
+                    <p>All future dates are open by default. Select a date to close or reopen it.</p>
+                </div>
+                <div class="admin-month-nav">
+                    <button type="button" aria-label="Previous month" (click)="changeMonth(-1)">←</button>
+                    <button type="button" aria-label="Next month" (click)="changeMonth(1)">→</button>
+                </div>
+            </div>
+            <h3 class="availability-month">{{ monthLabel() }}</h3>
+            <div class="admin-calendar">
+                @for (weekday of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; track weekday) {
+                <span class="admin-calendar__weekday">{{ weekday }}</span>
+                }
+                @for (cell of calendarCells(); track $index) {
+                @if (cell) {
+                <button type="button" [disabled]="dayIsPast(cell.date) || loading()" [class.admin-calendar__day--closed]="!cell.isAvailable"
+                    [class.admin-calendar__day--past]="dayIsPast(cell.date)" [class.admin-calendar__day--busy]="cell.reservationCount > 0"
+                    [attr.aria-label]="cell.date + ', ' + (cell.isAvailable ? 'available' : 'unavailable') + ', ' + cell.reservationCount + ' reservations'"
+                    (click)="toggleDate(cell)">
+                    <span>{{ cell.date.slice(-2) }}</span>
+                    <small>{{ cell.isAvailable ? cell.reservationCount + ' booked' : 'closed' }}</small>
+                </button>
+                } @else {
+                <span aria-hidden="true" class="admin-calendar__blank"></span>
+                }
+                }
+            </div>
+            <p class="availability-help">Dates with pending or approved bookings cannot be closed. Rejected bookings release their time and capacity.</p>
+        </section>
+        } @else {
+        <section class="admin-panel">
+            <div class="admin-panel__toolbar">
+                <div>
+                    <p class="admin-panel__eyebrow">ACCESS MANAGEMENT</p>
+                    <h2>Admin team</h2>
+                </div>
+            </div>
+            <div class="admin-team">
+                <form class="admin-create-form" (ngSubmit)="createAdmin()">
+                    <h3>Add an administrator</h3>
+                    <label>Full name
+                        <input name="adminName" required minlength="2" maxlength="100"
+                            [ngModel]="newAdminName()" (ngModelChange)="newAdminName.set($event)" />
+                    </label>
+                    <label>Email address
+                        <input name="adminEmail" type="email" required
+                            [ngModel]="newAdminEmail()" (ngModelChange)="newAdminEmail.set($event)" />
+                    </label>
+                    <label>Temporary password <span>12+ characters with uppercase, lowercase, number and symbol</span>
+                        <input name="adminPassword" type="password" required minlength="12" maxlength="128"
+                            [ngModel]="newAdminPassword()" (ngModelChange)="newAdminPassword.set($event)" />
+                    </label>
+                    <button type="submit" class="admin-action admin-action--approve">Create admin account</button>
+                </form>
+                <div class="admin-team__list">
+                    <h3>Current administrators</h3>
+                    @for (admin of admins(); track admin.id) {
+                    <article><span>{{ admin.name }}</span><a [href]="'mailto:' + admin.email">{{ admin.email }}</a></article>
+                    }
+                </div>
+            </div>
+        </section>
+        }
+    </div>
+</main>

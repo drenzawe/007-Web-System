@@ -1,0 +1,10 @@
+<main class="account-page">
+    <section class="account-card account-card--message">
+        <p class="account-eyebrow">007 RETROFIT STUDIO</p>
+        <h1>{{ confirmed() ? 'You’re all set.' : 'Email confirmation' }}</h1>
+        <p class="account-lead" role="status">{{ message() }}</p>
+        @if (confirmed()) {
+        <a routerLink="/schedule" class="account-submit account-submit--link">Continue to sign in <span aria-hidden="true">↗</span></a>
+        }
+    </section>
+</main>

@@ -1,0 +1,164 @@
+<main class="schedule-page">
+    <div class="schedule-page__inner">
+    <header class="schedule-page__header">
+        <p class="schedule-page__eyebrow"><span></span> RESERVATIONS · JAMES HILLARY 007</p>
+        <h1 class="schedule-page__title">Let's get you<br /><em>road-ready.</em></h1>
+        <p class="schedule-page__lead">
+            Choose an open date. Each day can take up to three reservations.
+        </p>
+    </header>
+
+    <aside role="note" class="schedule-note">
+        <span aria-hidden="true">!</span>
+        <p><strong>Prototype controls are public.</strong> Add admin authentication before deploying the availability controls.</p>
+    </aside>
+
+    @if (errorMessage()) {
+    <p role="alert" class="schedule-message schedule-message--error">{{ errorMessage() }}</p>
+    }
+    @if (successMessage()) {
+    <p role="status" class="schedule-message schedule-message--success">{{ successMessage() }}</p>
+    }
+
+    <div class="schedule-layout">
+        <section aria-label="Reservation calendar" class="calendar-card">
+            <div class="calendar-toolbar">
+                <button type="button" aria-label="Previous month" (click)="changeMonth(-1)"
+                    class="calendar-nav">
+                    &larr;
+                </button>
+                <h2 class="calendar-toolbar__month">{{ monthLabel() }}</h2>
+                <button type="button" aria-label="Next month" (click)="changeMonth(1)"
+                    class="calendar-nav">
+                    &rarr;
+                </button>
+            </div>
+
+            @if (loading() && !calendar()) {
+            <p class="calendar-feedback">Loading available dates...</p>
+            } @else if (calendar()) {
+            <div class="calendar-grid">
+                @for (weekday of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; track weekday) {
+            <span class="calendar-weekday">{{ weekday }}</span>
+                }
+                @for (cell of calendarCells(); track $index) {
+                @if (cell) {
+                <button type="button" (click)="selectDate(cell)" [disabled]="isUnselectable(cell.date)"
+                    [attr.aria-pressed]="selectedDate() === cell.date"
+                    [attr.aria-label]="cell.date + ', ' + cell.reservationCount + ' of ' + calendar()!.dailyCapacity + ' reserved, ' + dayStatus(cell)"
+                    class="calendar-day"
+                    [class.bg-slate-100]="dayStatus(cell) === 'unavailable'"
+                    [class.text-slate-400]="dayStatus(cell) === 'unavailable'"
+                    [class.bg-white]="dayStatus(cell) === 'open'"
+                    [class.text-slate-900]="dayStatus(cell) === 'open'"
+                    [class.bg-emerald-100]="dayStatus(cell) === 'one'"
+                    [class.text-emerald-900]="dayStatus(cell) === 'one'"
+                    [class.bg-amber-100]="dayStatus(cell) === 'almost-full'"
+                    [class.text-amber-900]="dayStatus(cell) === 'almost-full'"
+                    [class.bg-red-100]="dayStatus(cell) === 'full'"
+                    [class.text-red-900]="dayStatus(cell) === 'full'"
+                    [class.ring-2]="selectedDate() === cell.date"
+                    [class.calendar-day--selected]="selectedDate() === cell.date">
+                    <span class="block text-sm font-semibold">{{ cell.date.slice(-2) }}</span>
+                    <span class="mt-1 block text-[0.65rem] leading-tight">{{ cell.reservationCount }}/{{ calendar()!.dailyCapacity }}</span>
+                </button>
+                } @else {
+                <span aria-hidden="true" class="calendar-day--blank"></span>
+                }
+                }
+            </div>
+
+            <div class="calendar-legend" aria-label="Calendar legend">
+                <span><i class="calendar-legend__swatch calendar-legend__swatch--open"></i>Available</span>
+                <span><i class="calendar-legend__swatch calendar-legend__swatch--one"></i>1 reserved</span>
+                <span><i class="calendar-legend__swatch calendar-legend__swatch--almost"></i>Almost full</span>
+                <span><i class="calendar-legend__swatch calendar-legend__swatch--full"></i>Full</span>
+                <span><i class="calendar-legend__swatch calendar-legend__swatch--closed"></i>Unavailable</span>
+            </div>
+            }
+        </section>
+
+        <aside class="booking-card">
+            @if (selectedDay(); as day) {
+            <p class="booking-card__eyebrow"><span></span> SELECTED APPOINTMENT</p>
+            <h2 class="booking-card__date">{{ day.date }}</h2>
+            <p class="booking-card__capacity">
+                {{ day.reservationCount }} of {{ calendar()?.dailyCapacity }} reservations
+            </p>
+
+            @if (day.isAvailable && dayStatus(day) !== 'full' && auth.user() && !auth.user()?.isAdmin) {
+            <form (ngSubmit)="submitReservation()" class="booking-form">
+                <label>
+                    Appointment time (hourly, 9:00 AM to 5:00 PM)
+                    <select name="time" required
+                        [ngModel]="selectedTime()" (ngModelChange)="selectedTime.set($event)"
+                        class="booking-field">
+                        <option value="" disabled>Select an available time</option>
+                        @for (slot of timeSlots; track slot.value) {
+                        <option [value]="slot.value" [disabled]="day.reservedTimes.includes(slot.value)">
+                            {{ slot.label }}{{ day.reservedTimes.includes(slot.value) ? ' — booked' : '' }}
+                        </option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    Service type
+                    <select name="serviceType" required
+                        [ngModel]="serviceType()" (ngModelChange)="serviceType.set($event)"
+                        class="booking-field">
+                        <option value="Workshop">Workshop visit</option>
+                        <option value="Home">Home service (travel fee confirmed by admin)</option>
+                    </select>
+                </label>
+                <label>
+                    City or municipality
+                    <input type="text" name="city" autocomplete="address-level2" required maxlength="100"
+                        [ngModel]="city()" (ngModelChange)="city.set($event)"
+                        class="booking-field" />
+                </label>
+                <label>
+                    Address and barangay
+                    <textarea name="locationAddress" autocomplete="street-address" required minlength="5" maxlength="300"
+                        [ngModel]="locationAddress()" (ngModelChange)="locationAddress.set($event)"
+                        class="booking-field booking-field--textarea"></textarea>
+                </label>
+                <button type="submit" [disabled]="submitting()" class="booking-submit">
+                    {{ submitting() ? 'Reserving...' : 'Confirm reservation' }} <span aria-hidden="true">↗</span>
+                </button>
+            </form>
+            } @else if (day.isAvailable && dayStatus(day) !== 'full' && !auth.user()?.isAdmin) {
+            <div class="booking-login">
+                <p>Sign in with a confirmed account to request this appointment.</p>
+                <a routerLink="/register">Create an account <span aria-hidden="true">↗</span></a>
+            </div>
+            } @else if (auth.user()?.isAdmin) {
+            <p class="booking-state">Admin account: manage reservations in the admin panel.</p>
+            } @else if (dayStatus(day) === 'full') {
+            <p class="booking-state booking-state--full">This date is fully booked.</p>
+            } @else {
+            <p class="booking-state">This date is not open for reservations.</p>
+            }
+
+            @if (!isUnselectable(day.date) && auth.user()?.isAdmin) {
+            <div class="availability-controls">
+                <p>ADMIN AVAILABILITY CONTROLS</p>
+                <button type="button" (click)="toggleAvailability()" [disabled]="loading() || (day.isAvailable && day.reservationCount > 0)"
+                    class="availability-controls__button">
+                    {{ day.isAvailable ? 'Mark date unavailable' : 'Make date available' }}
+                </button>
+                @if (day.isAvailable && day.reservationCount > 0) {
+                <p class="availability-controls__hint">Dates with reservations cannot be closed.</p>
+                }
+            </div>
+            }
+            } @else {
+            <div class="booking-empty">
+                <span class="booking-empty__icon" aria-hidden="true">✳</span>
+                <strong>Your next upgrade starts here.</strong>
+                <span>Select a future date to view open appointment times.</span>
+            </div>
+            }
+        </aside>
+    </div>
+    </div>
+</main>

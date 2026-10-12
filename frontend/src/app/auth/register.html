@@ -1,0 +1,56 @@
+<main class="account-page">
+    <section class="account-card">
+        <p class="account-eyebrow">007 RETROFIT STUDIO</p>
+        <h1>Create your account.</h1>
+        <p class="account-lead">Sign up to request an appointment and keep track of your bookings.</p>
+
+        @if (error()) {
+        <p role="alert" class="account-message account-message--error">{{ error() }}</p>
+        }
+        @if (message()) {
+        <p role="status" class="account-message account-message--success">{{ message() }}</p>
+        }
+
+        @if (!message()) {
+        <form (ngSubmit)="submit()" class="account-form">
+            <label>
+                Full name
+                <input type="text" name="name" autocomplete="name" required minlength="2" maxlength="100"
+                    [ngModel]="name()" (ngModelChange)="name.set($event)" />
+            </label>
+            <label>
+                Email address
+                <input type="email" name="email" autocomplete="email" required maxlength="254"
+                    [ngModel]="email()" (ngModelChange)="email.set($event)" />
+            </label>
+            <label>
+                Mobile number <span class="account-optional">(optional)</span>
+                <input type="tel" name="phone" autocomplete="tel" maxlength="30"
+                    [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
+            </label>
+            <label>
+                Password <span class="account-optional">(12+ characters, upper- and lowercase, number and symbol)</span>
+                <input type="password" name="password" autocomplete="new-password" required minlength="12" maxlength="128"
+                    [ngModel]="password()" (ngModelChange)="password.set($event)" />
+            </label>
+            <button class="account-submit" type="submit" [disabled]="submitting()">
+                {{ submitting() ? 'Creating account...' : 'Create account' }} <span aria-hidden="true">↗</span>
+            </button>
+        </form>
+
+        @if (auth.socialProviders().google || auth.socialProviders().facebook) {
+        <div class="account-social">
+            <span>OR SIGN UP WITH</span>
+            @if (auth.socialProviders().google) {
+            <a [href]="socialLoginUrl('Google')">Continue with Google</a>
+            }
+            @if (auth.socialProviders().facebook) {
+            <a [href]="socialLoginUrl('Facebook')">Continue with Facebook</a>
+            }
+        </div>
+        }
+        }
+
+        <p class="account-footer">Already have an account? <a routerLink="/schedule">Go back and log in</a></p>
+    </section>
+</main>

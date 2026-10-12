@@ -1,0 +1,90 @@
+<nav class="site-nav">
+    <div class="site-nav__inner">
+        <a routerLink="/" class="brand" aria-label="007 Headlight Retrofit home">
+            <span class="brand__mark" aria-hidden="true">
+                <svg viewBox="0 0 48 48" fill="none">
+                    <path d="M8 27.5c7.1-10.2 17.1-15 30-14.5-2 4.8-3.6 10.1-4.8 16H8v-1.5Z"
+                        stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                    <path d="M12 34h19m-15-5 3 5m13-5-2 5M9 23h5" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" />
+                    <path d="M38 8v5m-6-2 3 3m8-3-3 3" stroke="#ffc45b" stroke-width="2"
+                        stroke-linecap="round" />
+                </svg>
+            </span>
+            <span class="brand__copy">
+                <strong>007 <span>HEADLIGHT</span></strong>
+                <small>RETROFIT STUDIO</small>
+            </span>
+        </a>
+
+        <div class="site-nav__links">
+            <a routerLink="/" class="site-nav__link">Home</a>
+            <a routerLink="/" fragment="services" class="site-nav__link">Services</a>
+            <a routerLink="/schedule" class="site-nav__cta">
+                Book a visit <span aria-hidden="true">↗</span>
+            </a>
+            @if (auth.user(); as user) {
+            @if (user.isAdmin) {
+            <a routerLink="/admin" class="site-nav__link">Admin</a>
+            } @else {
+            <a routerLink="/my-reservations" class="site-nav__link">My bookings</a>
+            }
+            <button type="button" class="site-nav__login" (click)="logout()">Log out</button>
+            } @else {
+            <button type="button" class="site-nav__login" (click)="openLoginModal()">Log in</button>
+            }
+        </div>
+    </div>
+</nav>
+
+@if (loginModalOpen()) {
+<div class="login-overlay" (click)="closeLoginModal()" (window:keydown.escape)="closeLoginModal()">
+    <section role="dialog" aria-modal="true" aria-labelledby="login-title" class="login-dialog"
+        (click)="$event.stopPropagation()">
+        <button type="button" aria-label="Close login dialog" (click)="closeLoginModal()" class="login-dialog__close">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+                <path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+            </svg>
+        </button>
+
+        <div class="login-dialog__heading">
+            <span class="eyebrow">007 RETROFIT STUDIO</span>
+            <h2 id="login-title">Welcome back.</h2>
+            <p>Sign in to manage your appointments.</p>
+        </div>
+
+        <form (submit)="onLoginSubmit($event)" class="login-form">
+            <label>
+                Email address
+                <input type="email" name="email" autocomplete="email" required placeholder="you@example.com" />
+            </label>
+
+            <label>
+                Password
+                <input type="password" name="password" autocomplete="current-password" required placeholder="Enter your password" />
+            </label>
+
+            <button type="submit" class="login-form__submit">Log in <span aria-hidden="true">↗</span></button>
+            <label class="login-form__remember">
+                <input type="checkbox" name="rememberMe" />
+                Keep me signed in
+            </label>
+            @if (loginMessage()) {
+            <p role="status" class="login-form__message">{{ loginMessage() }}</p>
+            }
+        </form>
+        <div class="login-social">
+            <span>OR CONTINUE WITH</span>
+            <div>
+                @if (auth.socialProviders().google) {
+                <a [href]="socialLoginUrl('Google')">Google</a>
+                }
+                @if (auth.socialProviders().facebook) {
+                <a [href]="socialLoginUrl('Facebook')">Facebook</a>
+                }
+            </div>
+        </div>
+        <p class="login-dialog__register">New here? <a routerLink="/register" (click)="closeLoginModal()">Create an account</a></p>
+    </section>
+</div>
+}
