@@ -43,6 +43,17 @@ describe('Navbar', () => {
     expect(component).toBeTruthy();
   });
 
+  it('keeps Home and Services navigation links available', () => {
+    const links = fixture.nativeElement.querySelectorAll(
+      '.site-nav__links .site-nav__link',
+    ) as NodeListOf<HTMLAnchorElement>;
+
+    expect(Array.from(links).map((link) => link.textContent?.trim())).toEqual([
+      'Home',
+      'Services',
+    ]);
+  });
+
   it('welcomes a signed-in user by name', () => {
     user.set({ name: 'Drenz', email: 'drenz@example.com', isAdmin: true });
     fixture.detectChanges();

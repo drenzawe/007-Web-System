@@ -293,12 +293,13 @@
 
   .site-nav__links {
     flex: 1 0 100%;
-    gap: 13px;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px 13px;
+    justify-content: space-between;
   }
 
   .site-nav__link {
-    display: none;
+    display: inline-flex;
   }
 
   .site-nav__cta {
