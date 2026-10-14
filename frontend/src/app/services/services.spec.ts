@@ -33,4 +33,16 @@ describe('ServicesPage', () => {
       link.href === 'https://www.facebook.com/007HeadlightRetrofit',
     )).toBe(true);
   });
+
+  it('shows all four project example videos with playback controls', () => {
+    const videos = fixture.nativeElement.querySelectorAll('video') as NodeListOf<HTMLVideoElement>;
+
+    expect(videos).toHaveLength(4);
+    expect(Array.from(videos).map((video) =>
+      video.querySelector('source')?.getAttribute('src'),
+    )).toEqual(['/sample0.mp4', '/sample1.mp4', '/sample2.mp4', '/sample3.mp4']);
+    expect(Array.from(videos).every((video) =>
+      video.controls && video.hasAttribute('playsinline'),
+    )).toBe(true);
+  });
 });

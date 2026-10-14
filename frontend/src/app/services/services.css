@@ -105,10 +105,14 @@
   font-size: 16px;
 }
 
-.services-hero__secondary {
-  color: #f1eee7;
+.services-hero__secondary,
+.project-example h3 {
   font-size: 12px;
   font-weight: 650;
+}
+
+.services-hero__secondary {
+  color: #f1eee7;
   text-decoration: none;
 }
 
@@ -122,7 +126,8 @@
   letter-spacing: 0.2em;
 }
 
-.service-menu {
+.service-menu,
+.project-examples {
   display: grid;
   width: min(1110px, calc(100% - 48px));
   grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.8fr);
@@ -266,6 +271,29 @@
   color: #ffda94;
 }
 
+.project-examples__intro h2 em {
+  color: #ffc45b;
+  font-style: normal;
+}
+
+.project-examples__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 18px;
+}
+
+.project-example video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgb(255 255 255 / 14%);
+  object-fit: contain;
+}
+
+.project-example h3 {
+  margin: 11px 0 0;
+}
+
 .service-cta {
   display: flex;
   width: min(1110px, calc(100% - 48px));
@@ -297,6 +325,16 @@
   }
 
   .service-menu__intro {
+    max-width: 520px;
+  }
+
+  .project-examples {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 75px 0;
+  }
+
+  .project-examples__intro {
     max-width: 520px;
   }
 
@@ -336,6 +374,7 @@
 
   .services-hero__content,
   .service-menu,
+  .project-examples,
   .service-cta {
     width: min(100% - 36px, 1110px);
   }
@@ -360,6 +399,10 @@
   }
 
   .service-menu__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-examples__grid {
     grid-template-columns: 1fr;
   }
 
