@@ -1,0 +1,26 @@
+# .NET build output
+**/bin/
+**/obj/
+
+# Frontend dependencies and generated output
+**/node_modules/
+**/dist/
+**/.angular/
+**/coverage/
+
+# Local databases
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Local environment and secrets
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets*.json
+
+# IDE and operating system files
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
