@@ -6,9 +6,11 @@ import { Register } from './auth/register';
 import { ConfirmEmail } from './auth/confirm-email';
 import { AdminPanel } from './admin/admin';
 import { MyReservations } from './auth/my-reservations';
+import { ServicesPage } from './services/services';
 
 export const routes: Routes = [
   { path: '', component: HomePage },
+  { path: 'services', component: ServicesPage },
   { path: 'schedule', component: Schedule },
   { path: 'register', component: Register },
   { path: 'confirm-email', component: ConfirmEmail },

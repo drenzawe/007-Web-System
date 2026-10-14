@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AdminAccount, AdminReservation, AdminService } from './admin.service';
+import { AdminAccount, AdminReservation, AdminService, AdminStatistics } from './admin.service';
 import { ScheduleDay, ScheduleMonth, ScheduleService } from '../schedule/schedule.service';
 
 @Component({
@@ -14,6 +14,10 @@ export class AdminPanel implements OnInit {
   protected readonly month = signal(this.currentMonth());
   protected readonly calendar = signal<ScheduleMonth | null>(null);
   protected readonly reservations = signal<AdminReservation[]>([]);
+  protected readonly statistics = signal<AdminStatistics | null>(null);
+  protected readonly statisticsPeriod = signal<'month' | 'year'>('month');
+  protected readonly statisticsMonth = signal(this.currentMonth());
+  protected readonly statisticsYear = signal(this.currentDate().slice(0, 4));
   protected readonly admins = signal<AdminAccount[]>([]);
   protected readonly section = signal<'requests' | 'availability' | 'admins'>('requests');
   protected readonly statusFilter = signal<'All' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
@@ -68,19 +72,41 @@ export class AdminPanel implements OnInit {
     this.loading.set(true);
     this.error.set('');
     try {
-      const [calendar, reservations, admins] = await Promise.all([
+      const [calendar, reservations, admins, statistics] = await Promise.all([
         this.scheduleService.getMonth(this.month()),
         this.adminService.getReservations(this.month()),
         this.adminService.getAdmins(),
+        this.adminService.getStatistics(
+          this.statisticsPeriod(),
+          this.statisticsPeriod() === 'month' ? this.statisticsMonth() : this.statisticsYear(),
+        ),
       ]);
       this.calendar.set(calendar);
       this.reservations.set(reservations);
       this.admins.set(admins);
+      this.statistics.set(statistics);
     } catch (error: unknown) {
       this.error.set(this.describeError(error));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  protected async loadStatistics(): Promise<void> {
+    try {
+      const statistics = await this.adminService.getStatistics(
+        this.statisticsPeriod(),
+        this.statisticsPeriod() === 'month' ? this.statisticsMonth() : this.statisticsYear(),
+      );
+      this.statistics.set(statistics);
+    } catch (error: unknown) {
+      this.error.set(this.describeError(error));
+    }
+  }
+
+  protected setStatisticsPeriod(period: 'month' | 'year'): void {
+    this.statisticsPeriod.set(period);
+    void this.loadStatistics();
   }
 
   protected changeMonth(offset: number): void {

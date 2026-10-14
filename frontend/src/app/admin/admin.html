@@ -16,6 +16,57 @@
         <p role="status" class="admin-message admin-message--success">{{ notice() }}</p>
         }
 
+        <section class="admin-statistics" aria-labelledby="statistics-title">
+            <div class="admin-statistics__header">
+                <div>
+                    <p class="admin-panel__eyebrow">BUSINESS OVERVIEW</p>
+                    <h2 id="statistics-title">Reservation statistics</h2>
+                </div>
+                <div class="admin-statistics__filters" aria-label="Statistics period">
+                    <button type="button" [class.admin-statistics__filter--active]="statisticsPeriod() === 'month'"
+                        (click)="setStatisticsPeriod('month')">Monthly</button>
+                    <button type="button" [class.admin-statistics__filter--active]="statisticsPeriod() === 'year'"
+                        (click)="setStatisticsPeriod('year')">Yearly</button>
+                    @if (statisticsPeriod() === 'month') {
+                    <input type="month" aria-label="Statistics month" [ngModel]="statisticsMonth()"
+                        (ngModelChange)="statisticsMonth.set($event); loadStatistics()" />
+                    } @else {
+                    <input type="number" aria-label="Statistics year" min="1" max="9998" [ngModel]="statisticsYear()"
+                        (ngModelChange)="statisticsYear.set($event); loadStatistics()" />
+                    }
+                </div>
+            </div>
+            @if (statistics(); as summary) {
+            <div class="admin-statistics__grid">
+                <article class="admin-stat-card">
+                    <span>Total reservations</span>
+                    <strong>{{ summary.totalReservations }}</strong>
+                    <small>{{ statisticsPeriod() === 'month' ? 'For this month' : 'For this year' }}</small>
+                </article>
+                <article class="admin-stat-card admin-stat-card--pending">
+                    <span>Pending</span>
+                    <strong>{{ summary.pendingReservations }}</strong>
+                    <small>Awaiting review</small>
+                </article>
+                <article class="admin-stat-card admin-stat-card--approved">
+                    <span>Approved</span>
+                    <strong>{{ summary.approvedReservations }}</strong>
+                    <small>Confirmed reservations</small>
+                </article>
+                <article class="admin-stat-card admin-stat-card--rejected">
+                    <span>Rejected</span>
+                    <strong>{{ summary.rejectedReservations }}</strong>
+                    <small>Rejected requests</small>
+                </article>
+                <article class="admin-stat-card admin-stat-card--customers">
+                    <span>Customers with reservations</span>
+                    <strong>{{ summary.uniqueCustomers }}</strong>
+                    <small>Unique customers with a reservation</small>
+                </article>
+            </div>
+            }
+        </section>
+
         <nav class="admin-tabs" aria-label="Admin sections">
             <button type="button" [class.admin-tab--active]="section() === 'requests'" (click)="section.set('requests')">
                 Reservations
@@ -90,9 +141,9 @@
                             (click)="approve(reservation)">Approve request</button>
                         <label class="reservation-actions__reason">
                             Rejection reason
-                            <input type="text" minlength="5" maxlength="500" placeholder="e.g. Outside our service area"
+                            <textarea minlength="5" maxlength="500" rows="2" placeholder="e.g. The service location is outside our travel area."
                                 [ngModel]="rejectionReasons()[reservation.id] ?? ''"
-                                (ngModelChange)="setRejectionReason(reservation.id, $event)" />
+                                (ngModelChange)="setRejectionReason(reservation.id, $event)"></textarea>
                         </label>
                         <button type="button" class="admin-action admin-action--reject" [disabled]="saving() === reservation.id"
                             (click)="reject(reservation)">Reject request</button>
@@ -125,7 +176,7 @@
                 }
                 @for (cell of calendarCells(); track $index) {
                 @if (cell) {
-                <button type="button" [disabled]="dayIsPast(cell.date) || loading()" [class.admin-calendar__day--closed]="!cell.isAvailable"
+                <button type="button" class="admin-calendar__day" [disabled]="dayIsPast(cell.date) || loading()" [class.admin-calendar__day--closed]="!cell.isAvailable"
                     [class.admin-calendar__day--past]="dayIsPast(cell.date)" [class.admin-calendar__day--busy]="cell.reservationCount > 0"
                     [attr.aria-label]="cell.date + ', ' + (cell.isAvailable ? 'available' : 'unavailable') + ', ' + cell.reservationCount + ' reservations'"
                     (click)="toggleDate(cell)">
@@ -158,8 +209,8 @@
                         <input name="adminEmail" type="email" required
                             [ngModel]="newAdminEmail()" (ngModelChange)="newAdminEmail.set($event)" />
                     </label>
-                    <label>Temporary password <span>12+ characters with uppercase, lowercase, number and symbol</span>
-                        <input name="adminPassword" type="password" required minlength="12" maxlength="128"
+                    <label>Temporary password <span>At least 8 characters</span>
+                        <input name="adminPassword" type="password" required minlength="8" maxlength="128"
                             [ngModel]="newAdminPassword()" (ngModelChange)="newAdminPassword.set($event)" />
                     </label>
                     <button type="submit" class="admin-action admin-action--approve">Create admin account</button>

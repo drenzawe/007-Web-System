@@ -29,8 +29,8 @@
                     [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
             </label>
             <label>
-                Password <span class="account-optional">(12+ characters, upper- and lowercase, number and symbol)</span>
-                <input type="password" name="password" autocomplete="new-password" required minlength="12" maxlength="128"
+                Password <span class="account-optional">(at least 8 characters)</span>
+                <input type="password" name="password" autocomplete="new-password" required minlength="8" maxlength="128"
                     [ngModel]="password()" (ngModelChange)="password.set($event)" />
             </label>
             <button class="account-submit" type="submit" [disabled]="submitting()">

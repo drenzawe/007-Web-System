@@ -62,6 +62,11 @@ public class AuthController(
         var created = await users.CreateAsync(user, request.Password);
         if (!created.Succeeded)
         {
+            if (created.Errors.Any(error => error.Code is "DuplicateEmail" or "DuplicateUserName"))
+            {
+                return Conflict(new { message = "An account with this email already exists." });
+            }
+
             return BadRequest(new
             {
                 message = "The account could not be created.",
@@ -353,7 +358,7 @@ public class RegisterRequest
     public string? Phone { get; set; }
 
     [Required]
-    [StringLength(128, MinimumLength = 12)]
+    [StringLength(128, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 }
 

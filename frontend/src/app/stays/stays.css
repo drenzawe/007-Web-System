@@ -19,7 +19,7 @@
 
 .services__intro {
   display: grid;
-  grid-template-columns: 1fr minmax(260px, 390px);
+  grid-template-columns: 1fr minmax(260px, 410px);
   align-items: end;
   gap: 60px;
   padding-bottom: 43px;
@@ -72,12 +72,12 @@
 
 .service-card {
   position: relative;
-  min-height: 291px;
-  padding: 32px 30px 28px 0;
+  min-height: 310px;
+  padding: 32px 28px 28px 0;
 }
 
 .service-card + .service-card {
-  padding-left: 30px;
+  padding-left: 28px;
   border-left: 1px solid rgb(255 255 255 / 14%);
 }
 
@@ -93,21 +93,20 @@
 
 .service-card__icon {
   display: grid;
-  width: 47px;
-  height: 47px;
+  width: 42px;
+  height: 42px;
   place-items: center;
   border: 1px solid rgb(255 196 91 / 38%);
-  border-radius: 14px;
+  border-radius: 50%;
+  background: rgb(255 196 91 / 6%);
   color: #ffc45b;
-}
-
-.service-card__icon svg {
-  width: 31px;
-  height: 31px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
 }
 
 .service-card h3 {
-  margin: 27px 0 10px;
+  margin: 24px 0 10px;
   color: #f4f2ec;
   font-size: 17px;
   font-weight: 650;
@@ -115,8 +114,8 @@
 }
 
 .service-card p {
-  max-width: 270px;
-  min-height: 60px;
+  max-width: 300px;
+  min-height: 66px;
   margin: 0;
   color: #aaa9a2;
   font-size: 12px;
@@ -141,6 +140,68 @@
 
 .service-card a span {
   font-size: 14px;
+}
+
+.services__feature {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  min-height: 300px;
+  margin-top: 42px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 10px;
+  background: #191b1d;
+}
+
+.services__feature-image {
+  min-height: 300px;
+  background:
+    linear-gradient(90deg, transparent 60%, #191b1d 100%),
+    url("/Hero0.jpg") center 55% / cover;
+}
+
+.services__feature-copy {
+  align-self: center;
+  padding: 32px 35px 32px 16px;
+}
+
+.services__feature-copy h3 {
+  margin: 0;
+  color: #f6f4ef;
+  font-size: clamp(26px, 3.6vw, 38px);
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+
+.services__feature-copy h3 em {
+  color: #ffc45b;
+  font-style: normal;
+}
+
+.services__feature-copy > p:not(.services__eyebrow) {
+  margin: 16px 0 0;
+  color: #aaa9a2;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.services__feature-copy > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  color: #e8c37b;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.services__feature-copy > a:hover {
+  color: #ffda94;
+}
+
+.services__feature-copy > a span {
+  font-size: 15px;
 }
 
 .services__foot {
@@ -204,6 +265,22 @@
 
   .service-card a {
     margin-top: 15px;
+  }
+
+  .services__feature {
+    grid-template-columns: 1fr;
+    margin-top: 26px;
+  }
+
+  .services__feature-image {
+    min-height: 230px;
+    background:
+      linear-gradient(0deg, #191b1d 0%, transparent 45%),
+      url("/Hero0.jpg") center 55% / cover;
+  }
+
+  .services__feature-copy {
+    padding: 10px 22px 25px;
   }
 
   .service-card__number {

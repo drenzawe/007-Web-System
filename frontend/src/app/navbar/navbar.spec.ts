@@ -1,15 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
+import { AuthService, SignedInUser } from '../auth/auth.service';
 import { Navbar } from './navbar';
 
 describe('Navbar', () => {
   let component: Navbar;
   let fixture: ComponentFixture<Navbar>;
+  let user: WritableSignal<SignedInUser | null>;
 
   beforeEach(async () => {
+    user = signal(null);
     await TestBed.configureTestingModule({
       imports: [Navbar],
       providers: [
@@ -17,7 +19,7 @@ describe('Navbar', () => {
         {
           provide: AuthService,
           useValue: {
-            user: signal(null),
+            user,
             loadSession: () => Promise.resolve(null),
             loadSocialProviders: () => Promise.resolve(),
             socialProviders: signal({ google: false, facebook: false }),
@@ -39,6 +41,13 @@ describe('Navbar', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('welcomes a signed-in user by name', () => {
+    user.set({ name: 'Drenz', email: 'drenz@example.com', isAdmin: true });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Welcome, Drenz!');
   });
 
   it('opens and closes the login dialog', () => {

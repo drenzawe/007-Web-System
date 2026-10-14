@@ -19,11 +19,12 @@
 
         <div class="site-nav__links">
             <a routerLink="/" class="site-nav__link">Home</a>
-            <a routerLink="/" fragment="services" class="site-nav__link">Services</a>
+            <a routerLink="/services" class="site-nav__link">Services</a>
             <a routerLink="/schedule" class="site-nav__cta">
                 Book a visit <span aria-hidden="true">↗</span>
             </a>
             @if (auth.user(); as user) {
+            <span class="site-nav__welcome">Welcome, {{ user.name }}!</span>
             @if (user.isAdmin) {
             <a routerLink="/admin" class="site-nav__link">Admin</a>
             } @else {

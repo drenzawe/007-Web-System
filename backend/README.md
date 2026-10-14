@@ -12,7 +12,7 @@ dotnet user-secrets set "AdminBootstrap:Email" "admin@example.com" --project bac
 dotnet user-secrets set "AdminBootstrap:Password" "<choose-a-unique-strong-password>" --project backend\backend.csproj
 ```
 
-The first configured admin is created only if the database has no admin accounts. Never use a default password or commit secrets. Additional admins can be created in `/admin`.
+Passwords must be at least 8 characters. The first configured admin is created only if the database has no admin accounts. Use a unique password and never commit secrets. Additional admins can be created in `/admin`.
 
 ## Configure email verification
 
@@ -27,7 +27,11 @@ dotnet user-secrets set "Email:Smtp:Password" "<your-smtp-password>" --project b
 dotnet user-secrets set "Email:Smtp:EnableSsl" "true" --project backend\backend.csproj
 ```
 
-The verification link defaults to `http://localhost:4200`. Set `Frontend:BaseUrl` when the frontend uses a different origin.
+The same SMTP settings send a notification to each administrator when a new booking is received and notify customers when a reservation is approved or rejected. Rejection emails include the admin's reason; approval emails include a home-service travel fee when applicable. Notification failures are logged and do not undo a saved booking decision. The verification link and admin link default to `http://localhost:4200`; set `Frontend:BaseUrl` when the frontend uses a different origin.
+
+Each customer may have one pending or approved reservation per date. A rejected reservation does not prevent the customer from requesting that date again. Admins must provide a rejection reason, which is shown to the customer with their reservation status.
+
+The admin dashboard reports reservation totals by status and distinct customers who made reservations for the selected month or year. Customer account creation dates are not stored, so these figures are not monthly or yearly registration counts.
 
 ## Optional Google and Facebook sign-in
 

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Net.Mail;
 using backend;
 using backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -16,11 +17,19 @@ public class ScheduleController : ControllerBase
     private const int DailyCapacity = 3;
     private readonly AppDbContext _context;
     private readonly UserManager<ApplicationUser> _users;
+    private readonly SmtpEmailSender _emailSender;
+    private readonly ILogger<ScheduleController> _logger;
 
-    public ScheduleController(AppDbContext context, UserManager<ApplicationUser> users)
+    public ScheduleController(
+        AppDbContext context,
+        UserManager<ApplicationUser> users,
+        SmtpEmailSender emailSender,
+        ILogger<ScheduleController> logger)
     {
         _context = context;
         _users = users;
+        _emailSender = emailSender;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -124,14 +133,28 @@ public class ScheduleController : ControllerBase
         var city = request.City.Trim();
         var locationAddress = request.LocationAddress.Trim();
         var serviceType = request.ServiceType;
-        var affectedRows = await _context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO \"Reservations\" (\"CustomerId\", \"ReservationDate\", \"ReservationTime\", \"CustomerName\", \"Email\", \"CustomerPhone\", \"City\", \"LocationAddress\", \"ServiceType\", \"TravelFeeCents\", \"Status\", \"RejectionReason\", \"CreatedAtUtc\") SELECT {customer.Id}, {dateText}, {request.Time}, {customer.DisplayName}, {customer.Email!}, {customer.PhoneNumber ?? string.Empty}, {city}, {locationAddress}, {serviceType}, 0, 'Pending', '', {DateTime.UtcNow} WHERE NOT EXISTS (SELECT 1 FROM \"UnavailableDates\" WHERE \"Date\" = {dateText}) AND (SELECT COUNT(*) FROM \"Reservations\" WHERE \"ReservationDate\" = {dateText} AND (\"Status\" = 'Pending' OR \"Status\" = 'Approved')) < {DailyCapacity} AND NOT EXISTS (SELECT 1 FROM \"Reservations\" WHERE \"ReservationDate\" = {dateText} AND \"ReservationTime\" = {request.Time} AND (\"Status\" = 'Pending' OR \"Status\" = 'Approved'))");
+        var affectedRows = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "Reservations" ("CustomerId", "ReservationDate", "ReservationTime", "CustomerName", "Email", "CustomerPhone", "City", "LocationAddress", "ServiceType", "TravelFeeCents", "Status", "RejectionReason", "CreatedAtUtc")
+            SELECT {customer.Id}, {dateText}, {request.Time}, {customer.DisplayName}, {customer.Email!}, {customer.PhoneNumber ?? string.Empty}, {city}, {locationAddress}, {serviceType}, 0, 'Pending', '', {DateTime.UtcNow}
+            WHERE NOT EXISTS (SELECT 1 FROM "UnavailableDates" WHERE "Date" = {dateText})
+                AND (SELECT COUNT(*) FROM "Reservations" WHERE "ReservationDate" = {dateText} AND ("Status" = 'Pending' OR "Status" = 'Approved')) < {DailyCapacity}
+                AND NOT EXISTS (SELECT 1 FROM "Reservations" WHERE "ReservationDate" = {dateText} AND "ReservationTime" = {request.Time} AND ("Status" = 'Pending' OR "Status" = 'Approved'))
+                AND NOT EXISTS (SELECT 1 FROM "Reservations" WHERE "CustomerId" = {customer.Id} AND "ReservationDate" = {dateText} AND ("Status" = 'Pending' OR "Status" = 'Approved'))
+            """);
 
         if (affectedRows == 0)
         {
             if (await _context.UnavailableDates.AnyAsync(unavailableDate => unavailableDate.Date == dateText))
             {
                 return Conflict(new { message = "This date is not available for reservations." });
+            }
+
+            if (await _context.Reservations.AnyAsync(reservation =>
+                    reservation.CustomerId == customer.Id &&
+                    reservation.ReservationDate == dateText &&
+                    (reservation.Status == "Pending" || reservation.Status == "Approved")))
+            {
+                return Conflict(new { message = "You already have a pending or approved reservation on this date." });
             }
 
             if (await _context.Reservations.AnyAsync(reservation =>
@@ -145,10 +168,69 @@ public class ScheduleController : ControllerBase
             return Conflict(new { message = "This date is fully booked." });
         }
 
+        await NotifyAdminsOfNewReservationAsync(
+            customer.DisplayName,
+            customer.Email!,
+            customer.PhoneNumber ?? string.Empty,
+            dateText,
+            request.Time,
+            serviceType,
+            city,
+            locationAddress);
+
         return StatusCode(StatusCodes.Status201Created, new
         {
             message = "Your reservation is pending admin approval."
         });
+    }
+
+    private async Task NotifyAdminsOfNewReservationAsync(
+        string customerName,
+        string customerEmail,
+        string customerPhone,
+        string date,
+        string time,
+        string serviceType,
+        string city,
+        string address)
+    {
+        if (!_emailSender.IsConfigured)
+        {
+            _logger.LogWarning("Could not email admins about reservation on {Date}: SMTP is not configured.", date);
+            return;
+        }
+
+        var recipients = (await _users.GetUsersInRoleAsync(AppRoles.Admin))
+            .Select(admin => admin.Email)
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (recipients.Length == 0)
+        {
+            _logger.LogWarning("Could not email admins about reservation on {Date}: no admin email addresses are configured.", date);
+            return;
+        }
+
+        foreach (var recipient in recipients)
+        {
+            try
+            {
+                await _emailSender.SendBookingNotificationAsync(
+                    recipient!,
+                    customerName,
+                    customerEmail,
+                    customerPhone,
+                    date,
+                    time,
+                    serviceType,
+                    city,
+                    address);
+            }
+            catch (SmtpException exception)
+            {
+                _logger.LogError(exception, "Failed to email admin {AdminEmail} about reservation on {Date}.", recipient, date);
+            }
+        }
     }
 
     private static bool TryParseDate(string value, out DateOnly date) =>

@@ -81,6 +81,15 @@
   transition: color 160ms ease;
 }
 
+.site-nav__welcome {
+  max-width: 180px;
+  overflow: hidden;
+  color: #f0d8a5;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .site-nav__link:hover,
 .site-nav__login:hover {
   color: #ffc45b;
@@ -218,6 +227,30 @@
   box-shadow: 0 0 0 3px rgb(245 185 66 / 17%);
 }
 
+.login-form .login-form__remember {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.login-form__remember input {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  flex: 0 0 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: #bf8a31;
+}
+
+.login-form__remember input:focus {
+  border-color: initial;
+  box-shadow: none;
+  outline: 2px solid #bf8a31;
+  outline-offset: 2px;
+}
+
 .login-form__submit {
   display: flex;
   align-items: center;
@@ -253,10 +286,15 @@
   .site-nav__inner {
     width: min(100% - 32px, 1160px);
     min-height: 70px;
+    flex-wrap: wrap;
+    gap: 0 12px;
+    padding: 10px 0;
   }
 
   .site-nav__links {
+    flex: 1 0 100%;
     gap: 13px;
+    justify-content: flex-end;
   }
 
   .site-nav__link {
@@ -271,6 +309,11 @@
 
   .site-nav__login {
     font-size: 12px;
+  }
+
+  .site-nav__welcome {
+    max-width: 140px;
+    font-size: 11px;
   }
 
   .brand__copy strong {

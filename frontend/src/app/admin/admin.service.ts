@@ -23,6 +23,15 @@ export interface AdminAccount {
   email: string;
 }
 
+export interface AdminStatistics {
+  period: string;
+  totalReservations: number;
+  pendingReservations: number;
+  approvedReservations: number;
+  rejectedReservations: number;
+  uniqueCustomers: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly endpoint = 'http://localhost:5075/api/admin';
@@ -33,6 +42,18 @@ export class AdminService {
     return firstValueFrom(
       this.http.get<AdminReservation[]>(`${this.endpoint}/reservations`, {
         params: { month },
+        withCredentials: true,
+      }),
+    );
+  }
+
+  getStatistics(period: 'month' | 'year', value: string): Promise<AdminStatistics> {
+    const params: Record<string, string> = period === 'month'
+      ? { month: value }
+      : { year: value };
+    return firstValueFrom(
+      this.http.get<AdminStatistics>(`${this.endpoint}/statistics`, {
+        params,
         withCredentials: true,
       }),
     );
