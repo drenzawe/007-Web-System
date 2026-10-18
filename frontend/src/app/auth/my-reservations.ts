@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { apiUrl } from '../api-url';
 
 interface CustomerReservation {
   id: number;
@@ -30,7 +31,7 @@ export class MyReservations implements OnInit {
     try {
       const reservations = await firstValueFrom(
         this.http.get<CustomerReservation[]>(
-          'http://localhost:5075/api/auth/my-reservations',
+          apiUrl('auth/my-reservations'),
           { withCredentials: true },
         ),
       );

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { apiUrl } from '../api-url';
 
 export interface AdminReservation {
   id: number;
@@ -34,7 +35,7 @@ export interface AdminStatistics {
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
-  private readonly endpoint = 'http://localhost:5075/api/admin';
+  private readonly endpoint = apiUrl('admin');
 
   constructor(private readonly http: HttpClient) {}
 

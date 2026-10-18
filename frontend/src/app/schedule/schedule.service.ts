@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { apiUrl } from '../api-url';
 
 export interface ScheduleDay {
   date: string;
@@ -25,7 +26,7 @@ export interface ReservationDetails {
 
 @Injectable({ providedIn: 'root' })
 export class ScheduleService {
-  private readonly endpoint = 'http://localhost:5075/api/schedule';
+  private readonly endpoint = apiUrl('schedule');
 
   constructor(private readonly http: HttpClient) {}
 

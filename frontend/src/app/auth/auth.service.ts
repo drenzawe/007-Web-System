@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { apiUrl } from '../api-url';
 
 export interface SignedInUser {
   name: string;
@@ -22,7 +23,7 @@ export interface SocialProviders {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly endpoint = 'http://localhost:5075/api/auth';
+  private readonly endpoint = apiUrl('auth');
   readonly user = signal<SignedInUser | null>(null);
   readonly checkingSession = signal(false);
   readonly socialProviders = signal<SocialProviders>({ google: false, facebook: false });

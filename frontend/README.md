@@ -36,6 +36,10 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+## API configuration
+
+Development builds send API requests to `http://localhost:5075/api`. Production builds use the same-origin `/api` path by default. If the backend is hosted on a separate origin, set `apiBaseUrl` in `src/environments/environment.production.ts` to its HTTPS API base URL and rebuild. Production configuration rejects insecure absolute API URLs.
+
 ## Running unit tests
 
 To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
